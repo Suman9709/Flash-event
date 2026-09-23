@@ -42,10 +42,16 @@ export async function login(
       rollNumber: student.rollNumber,
     });
 
+    response.cookie("student_access_token", accessToken, {
+      httpOnly: true,
+      secure: env.isProduction,
+      sameSite: "lax",
+      maxAge: env.jwtExpiresInSeconds * 1000,
+      path: "/api/v1",
+    });
+
     response.status(200).json({
       success: true,
-      accessToken,
-      tokenType: "Bearer",
       expiresIn: env.jwtExpiresInSeconds,
       student: {
         rollNumber: student.rollNumber,
@@ -55,4 +61,14 @@ export async function login(
   } catch (error) {
     next(error);
   }
+}
+
+export function logout(_request: Request, response: Response): void {
+  response.clearCookie("student_access_token", {
+    httpOnly: true,
+    secure: env.isProduction,
+    sameSite: "lax",
+    path: "/api/v1",
+  });
+  response.status(204).send();
 }

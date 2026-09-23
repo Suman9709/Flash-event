@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { checkDatabaseConnection } from "./db/pool.js";
+import { allowFrontendOrigin } from "./middleware/cors.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { resultRouter } from "./modules/results/result.routes.js";
 
@@ -7,6 +8,7 @@ export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
+  app.use(allowFrontendOrigin);
   app.use(express.json({ limit: "10kb" }));
 
   app.get("/health", async (_request, response) => {

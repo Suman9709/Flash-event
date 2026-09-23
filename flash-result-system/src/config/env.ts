@@ -34,4 +34,6 @@ export const env = {
   jwtIssuer: required("JWT_ISSUER"),
   jwtAudience: required("JWT_AUDIENCE"),
   jwtExpiresInSeconds: positiveInteger("JWT_EXPIRES_IN_SECONDS", 900),
+  frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
+  isProduction: process.env.NODE_ENV === "production",
 };

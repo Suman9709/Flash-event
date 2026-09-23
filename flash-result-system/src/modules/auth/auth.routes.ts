@@ -1,6 +1,8 @@
 import { Router } from "express";
-import { login } from "./auth.controller.js";
+import { login, logout } from "./auth.controller.js";
+import { loginRateLimit } from "../../middleware/loginRateLimit.js";
 
 export const authRouter = Router();
 
-authRouter.post("/login", login);
+authRouter.post("/login",loginRateLimit, login);
+authRouter.post("/logout", logout);
