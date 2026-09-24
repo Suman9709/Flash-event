@@ -4,6 +4,13 @@ import { createAccessToken } from "../../config/jwt.js";
 import { authenticateStudent } from "./auth.service.js";
 import { validateLoginBody } from "./auth.validation.js";
 
+const studentAccessCookieOptions = {
+  httpOnly: true,
+  secure: env.isProduction,
+  sameSite: "lax" as const,
+  path: "/api/v1",
+};
+
 export async function login(
   request: Request,
   response: Response,
@@ -36,11 +43,8 @@ export async function login(
     });
 
     response.cookie("student_access_token", accessToken, {
-      httpOnly: true,
-      secure: env.isProduction,
-      sameSite: "lax",
+      ...studentAccessCookieOptions,
       maxAge: env.jwtExpiresInSeconds * 1000,
-      path: "/api/v1",
     });
 
     response.status(200).json({
@@ -57,11 +61,11 @@ export async function login(
 }
 
 export function logout(_request: Request, response: Response): void {
+  // Remove the current cookie and a possible older cookie created at the root path.
+  response.clearCookie("student_access_token", studentAccessCookieOptions);
   response.clearCookie("student_access_token", {
-    httpOnly: true,
-    secure: env.isProduction,
-    sameSite: "lax",
-    path: "/api/v1",
+    ...studentAccessCookieOptions,
+    path: "/",
   });
   response.status(204).send();
 }
