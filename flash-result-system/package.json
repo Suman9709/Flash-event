@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "load:login": "node load-tests/login-load-test.mjs",
+    "snapshot:auth": "tsx src/workers/authSnapshot.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +18,8 @@
     "dotenv": "^18.0.3",
     "express": "^5.2.1",
     "jose": "^6.2.12",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "redis": "^6.2.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
@@ -25,4 +28,5 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
+
 }

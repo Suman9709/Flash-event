@@ -22,9 +22,14 @@ function positiveInteger(name: string, defaultValue: number): number {
 }
 
 const jwtSecret = required("JWT_SECRET");
+const authCacheSecret = required("AUTH_CACHE_SECRET");
 
 if (jwtSecret.length < 32) {
   throw new Error("JWT_SECRET must contain at least 32 characters");
+}
+
+if (authCacheSecret.length < 32) {
+  throw new Error("AUTH_CACHE_SECRET must contain at least 32 characters");
 }
 
 export const env = {
@@ -34,6 +39,8 @@ export const env = {
   jwtIssuer: required("JWT_ISSUER"),
   jwtAudience: required("JWT_AUDIENCE"),
   jwtExpiresInSeconds: positiveInteger("JWT_EXPIRES_IN_SECONDS", 900),
+  redisUrl: required("REDIS_URL"),
+  authCacheSecret,
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
   isProduction: process.env.NODE_ENV === "production",
 };

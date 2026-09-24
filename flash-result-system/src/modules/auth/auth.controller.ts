@@ -2,32 +2,25 @@ import type { NextFunction, Request, Response } from "express";
 import { env } from "../../config/env.js";
 import { createAccessToken } from "../../config/jwt.js";
 import { authenticateStudent } from "./auth.service.js";
-import type { LoginBody } from "./auth.types.js";
-
-const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+import { validateLoginBody } from "./auth.validation.js";
 
 export async function login(
-  request: Request<unknown, unknown, LoginBody>,
+  request: Request,
   response: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
-    const { rollNumber, dob } = request.body;
+    const validation = validateLoginBody(request.body);
 
-    if (
-      typeof rollNumber !== "string" ||
-      typeof dob !== "string" ||
-      !rollNumber.trim() ||
-      !datePattern.test(dob)
-    ) {
+    if (!validation.success) {
       response.status(400).json({
         success: false,
-        message: "rollNumber and dob (YYYY-MM-DD) are required",
+        message: validation.message,
       });
       return;
     }
 
-    const student = await authenticateStudent(rollNumber.trim(), dob);
+    const student = await authenticateStudent(validation.data.rollNumber, validation.data.dob);
 
     if (!student) {
       response.status(401).json({
