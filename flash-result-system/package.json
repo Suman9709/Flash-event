@@ -8,7 +8,8 @@
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "load:login": "node load-tests/login-load-test.mjs",
-    "snapshot:auth": "tsx src/workers/authSnapshot.ts"
+    "snapshot:auth": "tsx src/workers/authSnapshot.ts",
+    "snapshot:results": "tsx src/workers/resultSnapshot.ts"
   },
   "keywords": [],
   "author": "",
