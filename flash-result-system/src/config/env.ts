@@ -47,6 +47,12 @@ export const env = {
   admissionQueueMaxSize: positiveInteger("ADMISSION_QUEUE_MAX_SIZE", 1000),
   admissionRequestTtlSeconds: positiveInteger("ADMISSION_REQUEST_TTL_SECONDS", 120),
   admissionQueueDrainIntervalMs: positiveInteger("ADMISSION_QUEUE_DRAIN_INTERVAL_MS", 100),
+  loginRateLimitWindowSeconds: positiveInteger("LOGIN_RATE_LIMIT_WINDOW_SECONDS", 900),
+  loginRateLimitMaxAttemptsPerIp: positiveInteger("LOGIN_RATE_LIMIT_MAX_ATTEMPTS_PER_IP", 5),
+  loginRateLimitMaxAttemptsPerRollNumber: positiveInteger(
+    "LOGIN_RATE_LIMIT_MAX_ATTEMPTS_PER_ROLL_NUMBER",
+    5,
+  ),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
   isProduction: process.env.NODE_ENV === "production",
 };

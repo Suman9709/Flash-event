@@ -1,43 +1,43 @@
 import type { NextFunction, Request, Response } from "express";
+import { consumeLoginAttempt } from "../modules/auth/auth.rateLimit.js";
 
-type Attempt = {
-  count: number;
-  resetAt: number;
-};
+function getRollNumber(body: unknown): string | null {
+  if (typeof body !== "object" || body === null) {
+    return null;
+  }
 
-const attempts = new Map<string, Attempt>();
-const windowMs = 15 * 60 * 1000;
-const maxAttempts = 5;
+  const rollNumber = (body as Record<string, unknown>).rollNumber;
 
-export function loginRateLimit(
+  if (typeof rollNumber !== "string") {
+    return null;
+  }
+
+  const normalizedRollNumber = rollNumber.trim();
+
+  return normalizedRollNumber || null;
+}
+
+export async function loginRateLimit(
   request: Request,
   response: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const clientIp = request.ip ?? request.socket.remoteAddress ?? "unknown";
-  const now = Date.now();
-  const previousAttempt = attempts.get(clientIp);
 
-  if (!previousAttempt || now >= previousAttempt.resetAt) {
-    attempts.set(clientIp, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
+  try {
+    const decision = await consumeLoginAttempt(clientIp, getRollNumber(request.body));
+
+    if (!decision.allowed) {
+      response.setHeader("Retry-After", String(decision.retryAfterSeconds));
+      response.status(429).json({
+        success: false,
+        message: `Too many login attempts. Try again in ${decision.retryAfterSeconds} seconds.`,
+      });
+      return;
+    }
+
     next();
-    return;
+  } catch (error) {
+    next(error);
   }
-
-  if (previousAttempt.count >= maxAttempts) {
-    const retryAfterSeconds = Math.ceil((previousAttempt.resetAt - now) / 1000);
-
-    response.setHeader("Retry-After", String(retryAfterSeconds));
-    response.status(429).json({
-      success: false,
-      message: `Too many login attempts. Try again in ${retryAfterSeconds} seconds.`,
-    });
-    return;
-  }
-
-  previousAttempt.count += 1;
-  next();
 }

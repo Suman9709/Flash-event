@@ -8,6 +8,7 @@
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "load:login": "node load-tests/login-load-test.mjs",
+    "test:rate-limit": "node load-tests/verify-rate-limit.mjs",
     "snapshot:auth": "tsx src/workers/authSnapshot.ts",
     "snapshot:results": "tsx src/workers/resultSnapshot.ts",
     "admission:queue": "tsx src/workers/admissionQueue.ts"
