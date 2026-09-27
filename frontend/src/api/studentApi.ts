@@ -24,6 +24,14 @@ type LoginResponse = {
   };
 };
 
+type AdmissionResponse = {
+  success: true;
+  status: "admitted";
+  ticket: string;
+  expiresInSeconds: number;
+  remainingTokens: number;
+};
+
 type ResultResponse = {
   success: true;
   result: StudentResult;
@@ -38,7 +46,17 @@ const studentApi = axios.create({
 });
 
 export async function studentLogin(rollNumber: string, dob: string) {
-  const response = await studentApi.post<LoginResponse>("/auth/login", { rollNumber, dob });
+  const admission = await studentApi.post<AdmissionResponse>("/admission/enter");
+
+  const response = await studentApi.post<LoginResponse>(
+    "/auth/login",
+    { rollNumber, dob },
+    {
+      headers: {
+        "X-Admission-Ticket": admission.data.ticket,
+      },
+    },
+  );
   return response.data;
 }
 

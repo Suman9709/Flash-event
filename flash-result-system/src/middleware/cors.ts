@@ -10,7 +10,10 @@ export function allowFrontendOrigin(
     response.setHeader("Access-Control-Allow-Origin", env.frontendOrigin);
     response.setHeader("Access-Control-Allow-Credentials", "true");
     response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    response.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, X-Admission-Ticket",
+    );
     response.setHeader("Vary", "Origin");
   }
 

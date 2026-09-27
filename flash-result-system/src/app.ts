@@ -1,6 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { checkDatabaseConnection } from "./db/pool.js";
 import { allowFrontendOrigin } from "./middleware/cors.js";
+import { admissionRouter } from "./modules/admission/admission.route.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { resultRouter } from "./modules/results/result.routes.js";
 
@@ -35,6 +36,7 @@ export function createApp() {
     }
   });
 
+  app.use("/api/v1/admission", admissionRouter);
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/results", resultRouter);
 

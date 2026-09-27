@@ -41,6 +41,9 @@ export const env = {
   jwtExpiresInSeconds: positiveInteger("JWT_EXPIRES_IN_SECONDS", 900),
   redisUrl: required("REDIS_URL"),
   authCacheSecret,
+  admissionCapacity: positiveInteger("ADMISSION_CAPACITY", 100),
+  admissionRefillPerSecond: positiveInteger("ADMISSION_REFILL_PER_SECOND", 100),
+  admissionTicketTtlSeconds: positiveInteger("ADMISSION_TICKET_TTL_SECONDS", 60),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
   isProduction: process.env.NODE_ENV === "production",
 };
