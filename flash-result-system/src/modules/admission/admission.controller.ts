@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
-import { requestAdmission } from "./admission.service.js";
+import {
+  getAdmissionRequestStatus,
+  requestAdmission,
+} from "./admission.service.js";
 
 export async function enterAdmission(
   _request: Request,
@@ -19,7 +22,37 @@ export async function enterAdmission(
       return;
     }
 
-    response.status(201).json({
+    const statusCode = admission.status === "waiting" ? 202 : 201;
+
+    response.status(statusCode).json({
+      success: true,
+      ...admission,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getAdmissionStatus(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const requestId = Array.isArray(request.params.requestId)
+      ? request.params.requestId[0]
+      : request.params.requestId;
+    const admission = requestId ? await getAdmissionRequestStatus(requestId) : null;
+
+    if (!admission) {
+      response.status(404).json({
+        success: false,
+        message: "Admission request not found or expired",
+      });
+      return;
+    }
+
+    response.status(200).json({
       success: true,
       ...admission,
     });

@@ -1,13 +1,3 @@
-export type TokenBucketDecision =
-  | {
-      admitted: true;
-      remainingTokens: number;
-    }
-  | {
-      admitted: false;
-      retryAfterSeconds: number;
-    };
-
 export type AdmissionResponse =
   | {
       status: "admitted";
@@ -16,6 +6,22 @@ export type AdmissionResponse =
       remainingTokens: number;
     }
   | {
+      status: "waiting";
+      requestId: string;
+      expiresInSeconds: number;
+      queuePosition: number;
+    }
+  | {
       status: "rejected";
       retryAfterSeconds: number;
+    };
+
+export type AdmissionRequestStatus =
+  | {
+      status: "waiting";
+    }
+  | {
+      status: "admitted";
+      ticket: string;
+      expiresInSeconds: number;
     };

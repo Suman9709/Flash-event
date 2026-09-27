@@ -44,6 +44,9 @@ export const env = {
   admissionCapacity: positiveInteger("ADMISSION_CAPACITY", 100),
   admissionRefillPerSecond: positiveInteger("ADMISSION_REFILL_PER_SECOND", 100),
   admissionTicketTtlSeconds: positiveInteger("ADMISSION_TICKET_TTL_SECONDS", 60),
+  admissionQueueMaxSize: positiveInteger("ADMISSION_QUEUE_MAX_SIZE", 1000),
+  admissionRequestTtlSeconds: positiveInteger("ADMISSION_REQUEST_TTL_SECONDS", 120),
+  admissionQueueDrainIntervalMs: positiveInteger("ADMISSION_QUEUE_DRAIN_INTERVAL_MS", 100),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
   isProduction: process.env.NODE_ENV === "production",
 };

@@ -6,6 +6,7 @@ const requestCount = positiveInteger("LOAD_TEST_REQUESTS", 5000);
 const concurrency = positiveInteger("LOAD_TEST_CONCURRENCY", 50);
 const apiBaseUrl = (process.env.LOAD_TEST_API_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const allowAdmissionRejections = process.env.LOAD_TEST_ALLOW_ADMISSION_REJECTIONS === "true";
+const admissionPollIntervalMs = positiveInteger("LOAD_TEST_ADMISSION_POLL_INTERVAL_MS", 250);
 
 function positiveInteger(name, defaultValue) {
   const value = Number(process.env[name] ?? defaultValue);
@@ -77,12 +78,108 @@ function postJson(path, body, localAddress, additionalHeaders = {}) {
   });
 }
 
+function getJson(path, localAddress) {
+  return new Promise((resolve) => {
+    const request = httpRequest(
+      `${apiBaseUrl}${path}`,
+      {
+        method: "GET",
+        localAddress,
+      },
+      (response) => {
+        const chunks = [];
+
+        response.on("data", (chunk) => chunks.push(chunk));
+        response.on("end", () => {
+          let data = null;
+
+          try {
+            data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+          } catch {
+            // A non-JSON error response is still reported by its HTTP status.
+          }
+
+          resolve({
+            status: response.statusCode ?? 0,
+            data,
+          });
+        });
+      },
+    );
+
+    request.on("error", (error) => {
+      resolve({
+        status: 0,
+        error: error.message,
+      });
+    });
+
+    request.end();
+  });
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function getAdmissionTicket(localAddress) {
+  const admission = await postJson("/api/v1/admission/enter", {}, localAddress);
+  const directTicket = admission.data?.ticket;
+
+  if (admission.status === 201 && typeof directTicket === "string") {
+    return {
+      ticket: directTicket,
+      mode: "direct",
+    };
+  }
+
+  const requestId = admission.data?.requestId;
+  const expiresInSeconds = Number(admission.data?.expiresInSeconds);
+
+  if (admission.status !== 202 || typeof requestId !== "string" || !Number.isFinite(expiresInSeconds)) {
+    return {
+      error: admission.error,
+      mode: "rejected",
+      status: admission.status,
+    };
+  }
+
+  const expiresAt = Date.now() + expiresInSeconds * 1000;
+
+  while (Date.now() < expiresAt) {
+    await wait(admissionPollIntervalMs);
+
+    const status = await getJson(`/api/v1/admission/requests/${requestId}`, localAddress);
+    const queuedTicket = status.data?.ticket;
+
+    if (status.status === 200 && typeof queuedTicket === "string") {
+      return {
+        ticket: queuedTicket,
+        mode: "queued",
+      };
+    }
+
+    if (status.status !== 200) {
+      return {
+        error: status.error,
+        mode: "expired",
+        status: status.status,
+      };
+    }
+  }
+
+  return {
+    error: "Admission request timed out",
+    mode: "expired",
+    status: 0,
+  };
+}
+
 async function login(student, localAddress) {
   const startedAt = performance.now();
-  const admission = await postJson("/api/v1/admission/enter", {}, localAddress);
-  const ticket = admission.data?.ticket;
+  const admission = await getAdmissionTicket(localAddress);
 
-  if (admission.status !== 201 || typeof ticket !== "string") {
+  if (typeof admission.ticket !== "string") {
     return {
       stage: "admission",
       status: admission.status,
@@ -99,12 +196,13 @@ async function login(student, localAddress) {
     },
     localAddress,
     {
-      "X-Admission-Ticket": ticket,
+      "X-Admission-Ticket": admission.ticket,
     },
   );
 
   return {
     stage: "login",
+    admissionMode: admission.mode,
     status: loginResponse.status,
     durationMs: performance.now() - startedAt,
     error: loginResponse.error,
@@ -186,6 +284,7 @@ try {
         statusCounts,
         stageStatusCounts,
         successfulRequests: successfulRequests.length,
+        queuedAdmissions: results.filter((result) => result.admissionMode === "queued").length,
         admissionRejections: results.filter(
           (result) => result.stage === "admission" && result.status === 429,
         ).length,
