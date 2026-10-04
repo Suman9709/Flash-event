@@ -21,6 +21,24 @@ function positiveInteger(name: string, defaultValue: number): number {
   return parsed;
 }
 
+function boolean(name: string, defaultValue: boolean): boolean {
+  const value = process.env[name];
+
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  if (value === "true") {
+    return true;
+  }
+
+  if (value === "false") {
+    return false;
+  }
+
+  throw new Error(`${name} must be either true or false`);
+}
+
 const jwtSecret = required("JWT_SECRET");
 const authCacheSecret = required("AUTH_CACHE_SECRET");
 
@@ -54,5 +72,7 @@ export const env = {
     5,
   ),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
+  trustProxy: boolean("TRUST_PROXY", false),
+  appInstanceId: process.env.APP_INSTANCE_ID ?? process.env.HOSTNAME ?? "local",
   isProduction: process.env.NODE_ENV === "production",
 };

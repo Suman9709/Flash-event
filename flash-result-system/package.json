@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "build": "tsc",
+    "start:production": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "load:login": "node load-tests/login-load-test.mjs",
     "test:rate-limit": "node load-tests/verify-rate-limit.mjs",

@@ -59,7 +59,9 @@ type ResultResponse = {
 };
 
 const studentApi = axios.create({
-  baseURL: "http://localhost:3000/api/v1",
+  // Nginx is the public API entry point in the local replica setup. Set
+  // VITE_API_BASE_URL to use a deployed domain or a different environment.
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost/api/v1",
   headers: {
     "Content-Type": "application/json",
   },

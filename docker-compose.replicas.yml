@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: ./flash-result-system
+    env_file:
+      - ./flash-result-system/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      TRUST_PROXY: "true"
+      DATABASE_URL: ${DOCKER_DATABASE_URL:?Copy flash-result-system/.docker.env.example to .docker.env and set DOCKER_DATABASE_URL}
+      REDIS_URL: ${DOCKER_REDIS_URL:?Copy flash-result-system/.docker.env.example to .docker.env and set DOCKER_REDIS_URL}
+    expose:
+      - "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.29-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

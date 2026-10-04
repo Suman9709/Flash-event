@@ -1,7 +1,6 @@
 services:
   db:
-    image: postgres:16
-    # Contains only POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB.
+    image: ${POSTGRES_IMAGE:-postgres:16}
     # This local file is ignored by Git; copy .docker.env.example to create it.
     env_file:
       - ./flash-result-system/.docker.env
@@ -9,6 +8,11 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7
@@ -16,6 +20,13 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 volumes:
   db_data:
+    name: ${POSTGRES_DATA_VOLUME:-flashevent_db_data}
+    external: true
   redis_data:
